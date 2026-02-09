@@ -2,6 +2,8 @@
 
 # This is your argument
 
+run_name="001"
+
 gpu_device="0"
 
 nproc_per_node=1
@@ -218,7 +220,7 @@ downstream/train_isoform.py \
     --model_type ${MODEL_TYPE} \
 
 task='NoncodingRNAFamily'
-data_file_train=train_new.csv; data_file_val=val.csv; data_file_test=test
+data_file_train=train.csv; data_file_val=val.csv; data_file_test=test
 batch_size=16
 lr=5e-5
 DATA_PATH=${data_root}/downstream/${task}
