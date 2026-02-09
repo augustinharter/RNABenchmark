@@ -2,9 +2,13 @@
 
 # This is your argument
 
-run_name="001"
+# You can set SIZE_FRACTION to use a fraction of the data for training.
+# default is 1.0 (use all data)
+SIZE_FRACTION=${SIZE_FRACTION:-1.0}
+my_folder="/experiments/$SIZE_FRACTION"
+gpu_device=${GPU:-0}
+echo "Using SIZE_FRACTION: $SIZE_FRACTION on GPU device $gpu_device. Results will be saved in $my_folder"
 
-gpu_device="0"
 
 nproc_per_node=1
 master_port=$(shuf -i 10000-45000 -n 1)
@@ -30,13 +34,12 @@ data=''
 MODEL_PATH=${model_root}/baseline/BEACON-B/
 
 
-
-        
+ 
 task='Secondary_structure_prediction'
 batch_size=1
 lr=3e-5
 DATA_PATH=${data_root}/downstream/${task}/bpRNA
-OUTPUT_PATH=./outputs/ft/rna-all/${task}/BEACON-B/${MODEL_TYPE}  
+OUTPUT_PATH=.${my_folder}/rna-all/${task}/BEACON-B/${MODEL_TYPE}  
 EXEC_PREFIX="env CUDA_VISIBLE_DEVICES=$gpu_device torchrun --nproc_per_node=$nproc_per_node --master_port=$master_port"
 echo ${MODEL_PATH}
 ${EXEC_PREFIX} \
@@ -67,7 +70,7 @@ batch_size=1
 
 lr=3e-5
 DATA_PATH=${data_root}/downstream/${task}
-OUTPUT_PATH=./outputs/ft/rna-all/${task}/BEACON-B/${MODEL_TYPE}  
+OUTPUT_PATH=.${my_folder}/rna-all/${task}/BEACON-B/${MODEL_TYPE}  
 EXEC_PREFIX="env CUDA_VISIBLE_DEVICES=$gpu_device torchrun --nproc_per_node=$nproc_per_node --master_port=$master_port"
 echo ${MODEL_PATH}
 ${EXEC_PREFIX} \
@@ -96,7 +99,7 @@ data_file_train=train.csv; data_file_val=val.csv; data_file_test=test,RFAM19,DIR
 batch_size=1
 lr=5e-5
 DATA_PATH=${data_root}/downstream/${task}
-OUTPUT_PATH=./outputs/ft/rna-all/${task}/BEACON-B/${MODEL_TYPE}  
+OUTPUT_PATH=.${my_folder}/rna-all/${task}/BEACON-B/${MODEL_TYPE}  
 EXEC_PREFIX="env CUDA_VISIBLE_DEVICES=$gpu_device torchrun --nproc_per_node=$nproc_per_node --master_port=$master_port"
 echo ${MODEL_PATH}
 ${EXEC_PREFIX} \
@@ -124,7 +127,7 @@ data_file_train=train.csv; data_file_val=val.csv; data_file_test=test.csv
 batch_size=32
 lr=3e-5
 DATA_PATH=${data_root}/downstream/${task}
-OUTPUT_PATH=./outputs/ft/rna-all/${task}/BEACON-B/${MODEL_TYPE}  
+OUTPUT_PATH=.${my_folder}/rna-all/${task}/BEACON-B/${MODEL_TYPE}  
 EXEC_PREFIX="env CUDA_VISIBLE_DEVICES=$gpu_device torchrun --nproc_per_node=$nproc_per_node --master_port=$master_port"
 echo ${MODEL_PATH}
 ${EXEC_PREFIX} \
@@ -153,12 +156,13 @@ downstream/train_structural_score_imputation.py \
     --model_type ${MODEL_TYPE} \
 
 
+
 task='SpliceAI'
 data_file_train=train.csv; data_file_val=val.csv; data_file_test=test.csv
 batch_size=32
 lr=3e-5
 DATA_PATH=${data_root}/downstream/${task}
-OUTPUT_PATH=./outputs/ft/rna-all/${task}/BEACON-B/${MODEL_TYPE}  
+OUTPUT_PATH=.${my_folder}/rna-all/${task}/BEACON-B/${MODEL_TYPE}  
 EXEC_PREFIX="env CUDA_VISIBLE_DEVICES=$gpu_device torchrun --nproc_per_node=$nproc_per_node --master_port=$master_port"
 echo ${MODEL_PATH}
 ${EXEC_PREFIX} \
@@ -187,11 +191,11 @@ downstream/train_spliceai.py \
     --model_type ${MODEL_TYPE} \
 
 task='Isoform'
-data_file_train=train_new.csv; data_file_val=val.csv; data_file_test=test
+data_file_train=train.csv; data_file_val=val.csv; data_file_test=test
 batch_size=32
 lr=5e-5
 DATA_PATH=${data_root}/downstream/${task}
-OUTPUT_PATH=./outputs/ft/rna-all/${task}/BEACON-B/${MODEL_TYPE}  
+OUTPUT_PATH=.${my_folder}/rna-all/${task}/BEACON-B/${MODEL_TYPE}  
 EXEC_PREFIX="env CUDA_VISIBLE_DEVICES=$gpu_device torchrun --nproc_per_node=$nproc_per_node --master_port=$master_port"
 echo ${MODEL_PATH}
 ${EXEC_PREFIX} \
@@ -220,11 +224,11 @@ downstream/train_isoform.py \
     --model_type ${MODEL_TYPE} \
 
 task='NoncodingRNAFamily'
-data_file_train=train.csv; data_file_val=val.csv; data_file_test=test
+data_file_train=train.csv; data_file_val=val.csv; data_file_test=test.csv
 batch_size=16
 lr=5e-5
 DATA_PATH=${data_root}/downstream/${task}
-OUTPUT_PATH=./outputs/ft/rna-all/${task}/BEACON-B/${MODEL_TYPE}  
+OUTPUT_PATH=.${my_folder}/rna-all/${task}/BEACON-B/${MODEL_TYPE}  
 EXEC_PREFIX="env CUDA_VISIBLE_DEVICES=$gpu_device torchrun --nproc_per_node=$nproc_per_node --master_port=$master_port"
 echo ${MODEL_PATH}
 ${EXEC_PREFIX} \
@@ -258,7 +262,7 @@ data_file_train=train.csv; data_file_val=val.csv; data_file_test=test.csv
 batch_size=32
 lr=3e-5
 DATA_PATH=${data_root}/downstream/${task}
-OUTPUT_PATH=./outputs/ft/rna-all/${task}/BEACON-B/${MODEL_TYPE}  
+OUTPUT_PATH=.${my_folder}/rna-all/${task}/BEACON-B/${MODEL_TYPE}  
 EXEC_PREFIX="env CUDA_VISIBLE_DEVICES=$gpu_device torchrun --nproc_per_node=$nproc_per_node --master_port=$master_port"
 echo ${MODEL_PATH}
 ${EXEC_PREFIX} \
@@ -292,7 +296,7 @@ data_file_train=train.csv; data_file_val=val.csv; data_file_test=test.csv
 batch_size=32
 lr=1e-5
 DATA_PATH=${data_root}/downstream/${task}
-OUTPUT_PATH=./outputs/ft/rna-all/${task}/BEACON-B/${MODEL_TYPE}  
+OUTPUT_PATH=.${my_folder}/rna-all/${task}/BEACON-B/${MODEL_TYPE}  
 EXEC_PREFIX="env CUDA_VISIBLE_DEVICES=$gpu_device torchrun --nproc_per_node=$nproc_per_node --master_port=$master_port"
 echo ${MODEL_PATH}
 ${EXEC_PREFIX} \
@@ -323,10 +327,14 @@ downstream/train_mean_ribosome_loading.py \
 
 task='Degradation'
 data_file_train=train_1.json; data_file_val=val_1.json; data_file_test=test_1.json
-batch_size=32
+if [ "$SIZE_FRACTION" == "0.01" ] || [ "$SIZE_FRACTION" == "0.02" ]; then
+    batch_size=20
+else
+    batch_size=32
+fi
 lr=5e-5
 DATA_PATH=${data_root}/downstream/${task}/train-val-test
-OUTPUT_PATH=./outputs/ft/rna-all/${task}/BEACON-B/${MODEL_TYPE}  
+OUTPUT_PATH=.${my_folder}/rna-all/${task}/BEACON-B/${MODEL_TYPE}  
 EXEC_PREFIX="env CUDA_VISIBLE_DEVICES=$gpu_device torchrun --nproc_per_node=$nproc_per_node --master_port=$master_port"
 echo ${MODEL_PATH}
 ${EXEC_PREFIX} \
@@ -360,7 +368,7 @@ data_file_train=train.csv; data_file_val=val.csv; data_file_test=test.csv
 batch_size=32
 lr=1e-5
 DATA_PATH=${data_root}/downstream/${task}
-OUTPUT_PATH=./outputs/ft/rna-all/${task}/BEACON-B/${MODEL_TYPE}  
+OUTPUT_PATH=.${my_folder}/rna-all/${task}/BEACON-B/${MODEL_TYPE}  
 EXEC_PREFIX="env CUDA_VISIBLE_DEVICES=$gpu_device torchrun --nproc_per_node=$nproc_per_node --master_port=$master_port"
 echo ${MODEL_PATH}
 ${EXEC_PREFIX} \
@@ -393,7 +401,7 @@ data_file_train=train.csv; data_file_val=val.csv; data_file_test=test.csv
 batch_size=32
 lr=1e-5
 DATA_PATH=${data_root}/downstream/${task}
-OUTPUT_PATH=./outputs/ft/rna-all/${task}/BEACON-B/${MODEL_TYPE}  
+OUTPUT_PATH=.${my_folder}/rna-all/${task}/BEACON-B/${MODEL_TYPE}  
 EXEC_PREFIX="env CUDA_VISIBLE_DEVICES=$gpu_device torchrun --nproc_per_node=$nproc_per_node --master_port=$master_port"
 echo ${MODEL_PATH}
 ${EXEC_PREFIX} \
@@ -426,7 +434,7 @@ data_file_train=train.csv; data_file_val=val.csv; data_file_test=test.csv
 batch_size=32
 lr=3e-5
 DATA_PATH=${data_root}/downstream/${task}
-OUTPUT_PATH=./outputs/ft/rna-all/${task}/BEACON-B/${MODEL_TYPE}  
+OUTPUT_PATH=.${my_folder}/rna-all/${task}/BEACON-B/${MODEL_TYPE}  
 EXEC_PREFIX="env CUDA_VISIBLE_DEVICES=$gpu_device torchrun --nproc_per_node=$nproc_per_node --master_port=$master_port"
 echo ${MODEL_PATH}
 ${EXEC_PREFIX} \

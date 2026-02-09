@@ -27,6 +27,14 @@ class SSDataset(Dataset):
         self.df = df
         self.data_path = data_path
         self.tokenizer = tokenizer
+        # get size limit from env variable
+        env_size_fraction = os.getenv('SIZE_FRACTION')
+        if env_size_fraction is not None and (data_path.__contains__("train") or mode=='train'):
+            orig_size = len(self.df)
+            fraction = float(env_size_fraction)
+            stride = int(1 / fraction)
+            self.df = self.df[::stride].reset_index(drop=True)
+            print(f'Using size fraction: {env_size_fraction} with original dataset size: {orig_size} resulting in size: {len(self.df)}')
         print(f'len of dataset: {len(self.df)}')       
         self.args = args
 
@@ -76,6 +84,14 @@ class ContactMapDataset(Dataset):
         self.ids = ids
         # Turn the text into input_ids by
         self.texts = texts
+        # get size limit from env variable
+        env_size_fraction = os.getenv('SIZE_FRACTION')
+        if env_size_fraction is not None and data_path.__contains__("train"):
+            orig_size = len(texts)
+            fraction = float(env_size_fraction)
+            stride = int(1 / fraction)
+            self.texts = self.texts[::stride]
+            print(f'Using SIZE_FRACTION: {env_size_fraction} with original dataset size: {orig_size} resulting in size: {len(texts)}')
         self.num_labels = 1
         self.data_path = data_path
         # target path is in the same directory as the text file
@@ -117,6 +133,14 @@ class DistanceMapDataset(Dataset):
         self.ids = ids
         # Turn the text into input_ids by
         self.texts = texts
+        # get size limit from env variable
+        env_size_fraction = os.getenv('SIZE_FRACTION')
+        if env_size_fraction is not None and data_path.__contains__("train"):
+            orig_size = len(texts)
+            fraction = float(env_size_fraction)
+            stride = int(1 / fraction)
+            self.texts = self.texts[::stride]
+            print(f'Using SIZE_FRACTION: {env_size_fraction} with original dataset size: {orig_size} resulting in size: {len(texts)}')
         self.num_labels = 1
         self.data_path = data_path
         # target path is in the same directory as the text file

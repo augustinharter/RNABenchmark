@@ -173,6 +173,14 @@ class SupervisedDataset(Dataset):
                 torch.distributed.barrier()
         # ensure tokenier
         print(type(texts[0]))
+        # get size limit from env variable
+        env_size_fraction = os.getenv('SIZE_FRACTION')
+        if env_size_fraction is not None and data_path.split('/')[-1].__contains__("train"):
+            orig_size = len(texts)
+            fraction = float(env_size_fraction)
+            stride = int(1 / fraction)
+            texts = texts[::stride]
+            print(f'Using SIZE_FRACTION: {env_size_fraction} with original dataset size: {orig_size} resulting in size: {len(texts)}')
         print(texts[0])
         test_example = tokenizer.tokenize(texts[0])
         print(test_example)

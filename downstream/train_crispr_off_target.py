@@ -148,6 +148,14 @@ class SupervisedDataset(Dataset):
         # load data from the disk
         with open(data_path, "r") as f:
             data = list(csv.reader(f))[1:]
+             # get size limit from env variable
+            env_size_fraction = os.getenv('SIZE_FRACTION')
+            if env_size_fraction is not None and data_path.split('/')[-1].__contains__("train"):
+                orig_size = len(data)
+                fraction = float(env_size_fraction)
+                stride = int(1 / fraction)
+                data = data[::stride]
+                print(f'Using SIZE_FRACTION: {env_size_fraction} with original dataset size: {orig_size} resulting in size: {len(data)}')
 
         if len(data[0]) == 3:
             sgrna = [d[0].upper().replace("U", "T") for d in data]  

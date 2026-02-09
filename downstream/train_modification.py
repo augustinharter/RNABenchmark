@@ -150,7 +150,14 @@ class SupervisedDataset(Dataset):
 
         # load data from the disk
         data = pd.read_csv(data_path, sep=",")
-
+        # get size limit from env variable
+        env_size_fraction = os.getenv('SIZE_FRACTION')
+        if env_size_fraction is not None and data_path.__contains__("train"):
+            orig_size = len(data)
+            fraction = float(env_size_fraction)
+            stride = int(1 / fraction)
+            data = data[::stride].reset_index(drop=True)
+            print(f'Using SIZE_FRACTION: {env_size_fraction} with original dataset size: {orig_size} resulting in size: {len(data)}')
         # Processing the 'label' column: converting space-separated strings to a list of integers
         # We store these lists in a new column called 'targets'
         data['targets'] = data['label'].apply(lambda x: np.array(x.split(), dtype=np.int8))

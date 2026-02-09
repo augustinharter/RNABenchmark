@@ -2,6 +2,8 @@ data/
 checkpoint/
 wandb/
 outputs/
+outputs_old/
+experiments/
 
 # Byte-compiled / optimized / DLL files
 __pycache__/
