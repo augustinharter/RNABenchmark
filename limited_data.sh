@@ -9,5 +9,6 @@ export GPU=1
 for frac in "${fractions[@]}"; do
     echo "Running with SIZE_FRACTION=$frac"
     export SIZE_FRACTION=$frac
-    bash scripts/BEACON-B/all_task.sh
+    bash scripts/BEACON-B/all_task.sh > logs/${frac}.txt
 done
+python rm_checkpoints.py

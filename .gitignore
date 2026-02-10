@@ -4,6 +4,7 @@ wandb/
 outputs/
 outputs_old/
 experiments/
+logs/
 
 # Byte-compiled / optimized / DLL files
 __pycache__/
