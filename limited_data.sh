@@ -5,10 +5,13 @@ if [ $# -eq 0 ]; then
 else
     fractions=($@)
 fi
-export GPU=1
+# export GPU if not already set
+if [ -z "$GPU" ]; then
+    export GPU=1
+fi
 for frac in "${fractions[@]}"; do
     echo "Running with SIZE_FRACTION=$frac"
     export SIZE_FRACTION=$frac
     bash scripts/BEACON-B/all_task.sh > logs/${frac}.txt
+    python rm_checkpoints.py
 done
-python rm_checkpoints.py
