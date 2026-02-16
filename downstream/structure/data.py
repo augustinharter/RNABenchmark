@@ -34,7 +34,7 @@ class SSDataset(Dataset):
             fraction = float(env_size_fraction)
             stride = int(1 / fraction)
             self.df = self.df[::stride].reset_index(drop=True)
-            print(f'Using size fraction: {env_size_fraction} with original dataset size: {orig_size} resulting in size: {len(self.df)}')
+            print(f'Using size fraction: {env_size_fraction} with ({data_path}/bpRNA.csv) dataset size: {orig_size} resulting in size: {len(self.df)}')
         print(f'len of dataset: {len(self.df)}')       
         self.args = args
 
@@ -91,7 +91,7 @@ class ContactMapDataset(Dataset):
             fraction = float(env_size_fraction)
             stride = int(1 / fraction)
             self.texts = self.texts[::stride]
-            print(f'Using SIZE_FRACTION: {env_size_fraction} with original dataset size: {orig_size} resulting in size: {len(texts)}')
+            print(f'Using SIZE_FRACTION: {env_size_fraction} with ({data_path}) dataset size: {orig_size} resulting in size: {len(texts)}')
         self.num_labels = 1
         self.data_path = data_path
         # target path is in the same directory as the text file
@@ -140,7 +140,7 @@ class DistanceMapDataset(Dataset):
             fraction = float(env_size_fraction)
             stride = int(1 / fraction)
             self.texts = self.texts[::stride]
-            print(f'Using SIZE_FRACTION: {env_size_fraction} with original dataset size: {orig_size} resulting in size: {len(texts)}')
+            print(f'Using SIZE_FRACTION: {env_size_fraction} with ({data_path}) dataset size: {orig_size} resulting in size: {len(texts)}')
         self.num_labels = 1
         self.data_path = data_path
         # target path is in the same directory as the text file
