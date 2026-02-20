@@ -90,7 +90,8 @@ for limit in limits:
                 with open(eval_file, 'r') as f:
                     results : dict = json.load(f)
                     if not results:
-                        limit_results[task] = 0
+                        limit_results[task] = -0.01
+                        print(f"Results for {task}: Empty results found at {eval_file}")
                     else:
                         metric = results[task_to_metric[task]]
                         limit_results[task] = metric

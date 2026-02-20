@@ -151,6 +151,7 @@ def main(args):
 
     model_config = extractor.config
     model = SSCNNPredictor(args, extractor, model_config, tokenizer, args.is_freeze)
+    print(next(model.parameters()))
     num_params = count_parameters(model)
     print(f"model params are: {num_params}")
 
@@ -200,7 +201,7 @@ def main(args):
     val_loss_list = []
     test_loss_list = []
     step = 0
-    last_val, best_val, best_test = 0, 0, {}
+    last_val, best_val, best_test = -1, -1, {}
     patience = args.patience
     early_stop_flag = 0
     for epoch in range(args.num_epochs):

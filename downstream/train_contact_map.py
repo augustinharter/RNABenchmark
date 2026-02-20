@@ -256,7 +256,7 @@ def main(args):
     val_loss_list = []
     test_loss_list = []
     step = 0
-    last_val, best_val, best_test = 0, 0, []
+    last_val, best_val, best_test = -1, -1, []
     patience = args.patience
     early_stop_flag = 0
     for epoch in range(args.num_epochs):

@@ -56,7 +56,7 @@ downstream/train_secondary_structure.py \
     --gradient_accumulation_steps 8 \
     --lr ${lr} \
     --num_epochs 100 \
-    --patience 60 \
+    --patience 10 \
     --num_workers 1 \
     --token_type ${token} \
     --model_type ${MODEL_TYPE} \
@@ -88,7 +88,7 @@ downstream/train_contact_map.py \
     --gradient_accumulation_steps 8 \
     --lr ${lr} \
     --num_epochs 100 \
-    --patience 60 \
+    --patience 10 \
     --num_workers 1 \
     --token_type ${token} \
     --model_type ${MODEL_TYPE} \
@@ -117,7 +117,7 @@ downstream/train_distance_map.py \
     --gradient_accumulation_steps 8 \
     --lr ${lr} \
     --num_epochs 100 \
-    --patience 60 \
+    --patience 10 \
     --num_workers 1 \
     --token_type ${token} \
     --model_type ${MODEL_TYPE} \
