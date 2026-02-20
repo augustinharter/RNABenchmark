@@ -7,9 +7,14 @@ export PYTHON_EXEC=/pfss/mlde/workspaces/mlde_wsp_GenomicKB_KGs/ah/miniconda3/en
 # You can set SIZE_FRACTION to use a fraction of the data for training.
 # default is 1.0 (use all data)
 SIZE_FRACTION=${SIZE_FRACTION:-1.0}
+EPOCH_FRACTION=${SIZE_FRACTION}
+
+# compute epoch multiplier from fraction to get same compute budget for each run, use python -c "print(int(1.0 / $EPOCH_FRACTION))"
+EPOCH_MULTIPLIER=$(python -c "print(int(1.0 / $EPOCH_FRACTION))")
+
 my_folder="/experiments/$SIZE_FRACTION"
 gpu_device=${GPU:-0}
-echo "Using SIZE_FRACTION: $SIZE_FRACTION on GPU device $gpu_device. Results will be saved in $my_folder"
+echo "Using SIZE_FRACTION: $SIZE_FRACTION with EPOCH_MULTIPLIER: $EPOCH_MULTIPLIER on GPU device $gpu_device. Results will be saved in $my_folder"
 
 
 nproc_per_node=1
@@ -43,6 +48,7 @@ lr=3e-5
 DATA_PATH=${data_root}/downstream/${task}/bpRNA
 OUTPUT_PATH=.${my_folder}/rna-all/${task}/BEACON-B/${MODEL_TYPE}  
 EXEC_PREFIX="env CUDA_VISIBLE_DEVICES=$gpu_device torchrun --nproc_per_node=$nproc_per_node --master_port=$master_port"
+num_epochs=$(python -c "print(int(100 / $EPOCH_FRACTION))")
 echo ${MODEL_PATH}
 ${EXEC_PREFIX} \
 downstream/train_secondary_structure.py \
@@ -55,8 +61,8 @@ downstream/train_secondary_structure.py \
     --per_device_eval_batch_size 1 \
     --gradient_accumulation_steps 8 \
     --lr ${lr} \
-    --num_epochs 100 \
-    --patience 10 \
+    --num_epochs ${num_epochs} \
+    --patience 100 \
     --num_workers 1 \
     --token_type ${token} \
     --model_type ${MODEL_TYPE} \
@@ -74,6 +80,7 @@ lr=3e-5
 DATA_PATH=${data_root}/downstream/${task}
 OUTPUT_PATH=.${my_folder}/rna-all/${task}/BEACON-B/${MODEL_TYPE}  
 EXEC_PREFIX="env CUDA_VISIBLE_DEVICES=$gpu_device torchrun --nproc_per_node=$nproc_per_node --master_port=$master_port"
+num_epochs=$(python -c "print(int(100 / $EPOCH_FRACTION))")
 echo ${MODEL_PATH}
 ${EXEC_PREFIX} \
 downstream/train_contact_map.py \
@@ -87,8 +94,8 @@ downstream/train_contact_map.py \
     --per_device_eval_batch_size 1 \
     --gradient_accumulation_steps 8 \
     --lr ${lr} \
-    --num_epochs 100 \
-    --patience 10 \
+    --num_epochs ${num_epochs} \
+    --patience 100 \
     --num_workers 1 \
     --token_type ${token} \
     --model_type ${MODEL_TYPE} \
@@ -103,6 +110,7 @@ lr=5e-5
 DATA_PATH=${data_root}/downstream/${task}
 OUTPUT_PATH=.${my_folder}/rna-all/${task}/BEACON-B/${MODEL_TYPE}  
 EXEC_PREFIX="env CUDA_VISIBLE_DEVICES=$gpu_device torchrun --nproc_per_node=$nproc_per_node --master_port=$master_port"
+num_epochs=$(python -c "print(int(100 / $EPOCH_FRACTION))")
 echo ${MODEL_PATH}
 ${EXEC_PREFIX} \
 downstream/train_distance_map.py \
@@ -116,8 +124,8 @@ downstream/train_distance_map.py \
     --per_device_eval_batch_size 1 \
     --gradient_accumulation_steps 8 \
     --lr ${lr} \
-    --num_epochs 100 \
-    --patience 10 \
+    --num_epochs ${num_epochs} \
+    --patience 100 \
     --num_workers 1 \
     --token_type ${token} \
     --model_type ${MODEL_TYPE} \
@@ -131,6 +139,7 @@ lr=3e-5
 DATA_PATH=${data_root}/downstream/${task}
 OUTPUT_PATH=.${my_folder}/rna-all/${task}/BEACON-B/${MODEL_TYPE}  
 EXEC_PREFIX="env CUDA_VISIBLE_DEVICES=$gpu_device torchrun --nproc_per_node=$nproc_per_node --master_port=$master_port"
+num_epochs=$(python -c "print(int(30 / $EPOCH_FRACTION))")
 echo ${MODEL_PATH}
 ${EXEC_PREFIX} \
 downstream/train_structural_score_imputation.py \
@@ -143,7 +152,7 @@ downstream/train_structural_score_imputation.py \
     --per_device_eval_batch_size 32 \
     --gradient_accumulation_steps 1 \
     --learning_rate ${lr} \
-    --num_train_epochs 30 \
+    --num_train_epochs ${num_epochs} \
     --fp16 \
     --save_steps 400 \
     --output_dir ${OUTPUT_PATH}/${data} \
@@ -166,6 +175,7 @@ lr=3e-5
 DATA_PATH=${data_root}/downstream/${task}
 OUTPUT_PATH=.${my_folder}/rna-all/${task}/BEACON-B/${MODEL_TYPE}  
 EXEC_PREFIX="env CUDA_VISIBLE_DEVICES=$gpu_device torchrun --nproc_per_node=$nproc_per_node --master_port=$master_port"
+num_epochs=$(python -c "print(int(30 / $EPOCH_FRACTION))")
 echo ${MODEL_PATH}
 ${EXEC_PREFIX} \
 downstream/train_spliceai.py \
@@ -178,7 +188,7 @@ downstream/train_spliceai.py \
     --per_device_eval_batch_size 32 \
     --gradient_accumulation_steps 1 \
     --learning_rate ${lr} \
-    --num_train_epochs 30 \
+    --num_train_epochs ${num_epochs} \
     --fp16 \
     --save_steps 400 \
     --output_dir ${OUTPUT_PATH}/${data} \
@@ -199,6 +209,7 @@ lr=5e-5
 DATA_PATH=${data_root}/downstream/${task}
 OUTPUT_PATH=.${my_folder}/rna-all/${task}/BEACON-B/${MODEL_TYPE}  
 EXEC_PREFIX="env CUDA_VISIBLE_DEVICES=$gpu_device torchrun --nproc_per_node=$nproc_per_node --master_port=$master_port"
+num_epochs=$(python -c "print(int(30 / $EPOCH_FRACTION))")
 echo ${MODEL_PATH}
 ${EXEC_PREFIX} \
 downstream/train_isoform.py \
@@ -211,7 +222,7 @@ downstream/train_isoform.py \
     --per_device_eval_batch_size 32 \
     --gradient_accumulation_steps 1 \
     --learning_rate ${lr} \
-    --num_train_epochs 30 \
+    --num_train_epochs ${num_epochs} \
     --fp16 \
     --save_steps 400 \
     --output_dir ${OUTPUT_PATH}/${data} \
@@ -232,6 +243,7 @@ lr=5e-5
 DATA_PATH=${data_root}/downstream/${task}
 OUTPUT_PATH=.${my_folder}/rna-all/${task}/BEACON-B/${MODEL_TYPE}  
 EXEC_PREFIX="env CUDA_VISIBLE_DEVICES=$gpu_device torchrun --nproc_per_node=$nproc_per_node --master_port=$master_port"
+num_epochs=$(python -c "print(int(30 / $EPOCH_FRACTION))")
 echo ${MODEL_PATH}
 ${EXEC_PREFIX} \
 downstream/train_ncrna.py \
@@ -244,7 +256,7 @@ downstream/train_ncrna.py \
     --per_device_eval_batch_size 32 \
     --gradient_accumulation_steps 2 \
     --learning_rate ${lr} \
-    --num_train_epochs 30 \
+    --num_train_epochs ${num_epochs} \
     --fp16 \
     --save_steps 400 \
     --output_dir ${OUTPUT_PATH}/${seed} \
@@ -266,6 +278,7 @@ lr=3e-5
 DATA_PATH=${data_root}/downstream/${task}
 OUTPUT_PATH=.${my_folder}/rna-all/${task}/BEACON-B/${MODEL_TYPE}  
 EXEC_PREFIX="env CUDA_VISIBLE_DEVICES=$gpu_device torchrun --nproc_per_node=$nproc_per_node --master_port=$master_port"
+num_epochs=$(python -c "print(int(30 / $EPOCH_FRACTION))")
 echo ${MODEL_PATH}
 ${EXEC_PREFIX} \
 downstream/train_modification.py \
@@ -278,7 +291,7 @@ downstream/train_modification.py \
     --per_device_eval_batch_size 32 \
     --gradient_accumulation_steps 1 \
     --learning_rate ${lr} \
-    --num_train_epochs 30 \
+    --num_train_epochs ${num_epochs} \
     --fp16 \
     --save_steps 400 \
     --output_dir ${OUTPUT_PATH}/${seed} \
@@ -300,6 +313,7 @@ lr=1e-5
 DATA_PATH=${data_root}/downstream/${task}
 OUTPUT_PATH=.${my_folder}/rna-all/${task}/BEACON-B/${MODEL_TYPE}  
 EXEC_PREFIX="env CUDA_VISIBLE_DEVICES=$gpu_device torchrun --nproc_per_node=$nproc_per_node --master_port=$master_port"
+num_epochs=$(python -c "print(int(30 / $EPOCH_FRACTION))")
 echo ${MODEL_PATH}
 ${EXEC_PREFIX} \
 downstream/train_mean_ribosome_loading.py \
@@ -312,7 +326,7 @@ downstream/train_mean_ribosome_loading.py \
     --per_device_eval_batch_size 32 \
     --gradient_accumulation_steps 1 \
     --learning_rate ${lr} \
-    --num_train_epochs 30 \
+    --num_train_epochs ${num_epochs} \
     --fp16 \
     --save_steps 400 \
     --output_dir ${OUTPUT_PATH}/${seed} \
@@ -338,6 +352,7 @@ lr=5e-5
 DATA_PATH=${data_root}/downstream/${task}/train-val-test
 OUTPUT_PATH=.${my_folder}/rna-all/${task}/BEACON-B/${MODEL_TYPE}  
 EXEC_PREFIX="env CUDA_VISIBLE_DEVICES=$gpu_device torchrun --nproc_per_node=$nproc_per_node --master_port=$master_port"
+num_epochs=$(python -c "print(int(100 / $EPOCH_FRACTION))")
 echo ${MODEL_PATH}
 ${EXEC_PREFIX} \
 downstream/train_degradation.py \
@@ -350,7 +365,7 @@ downstream/train_degradation.py \
     --per_device_eval_batch_size 32 \
     --gradient_accumulation_steps 1 \
     --learning_rate ${lr} \
-    --num_train_epochs 100 \
+    --num_train_epochs ${num_epochs} \
     --fp16 \
     --save_steps 400 \
     --output_dir ${OUTPUT_PATH}/${seed} \
@@ -372,6 +387,7 @@ lr=1e-5
 DATA_PATH=${data_root}/downstream/${task}
 OUTPUT_PATH=.${my_folder}/rna-all/${task}/BEACON-B/${MODEL_TYPE}  
 EXEC_PREFIX="env CUDA_VISIBLE_DEVICES=$gpu_device torchrun --nproc_per_node=$nproc_per_node --master_port=$master_port"
+num_epochs=$(python -c "print(int(30 / $EPOCH_FRACTION))")
 echo ${MODEL_PATH}
 ${EXEC_PREFIX} \
 downstream/train_programmable_rna_switches.py \
@@ -384,7 +400,7 @@ downstream/train_programmable_rna_switches.py \
     --per_device_eval_batch_size 32 \
     --gradient_accumulation_steps 1 \
     --learning_rate ${lr} \
-    --num_train_epochs 30 \
+    --num_train_epochs ${num_epochs} \
     --fp16 \
     --save_steps 400 \
     --output_dir ${OUTPUT_PATH}/${seed} \
@@ -405,6 +421,7 @@ lr=1e-5
 DATA_PATH=${data_root}/downstream/${task}
 OUTPUT_PATH=.${my_folder}/rna-all/${task}/BEACON-B/${MODEL_TYPE}  
 EXEC_PREFIX="env CUDA_VISIBLE_DEVICES=$gpu_device torchrun --nproc_per_node=$nproc_per_node --master_port=$master_port"
+num_epochs=$(python -c "print(int(30 / $EPOCH_FRACTION))")
 echo ${MODEL_PATH}
 ${EXEC_PREFIX} \
 downstream/train_crispr_on_target.py \
@@ -417,7 +434,7 @@ downstream/train_crispr_on_target.py \
     --per_device_eval_batch_size 32 \
     --gradient_accumulation_steps 1 \
     --learning_rate ${lr} \
-    --num_train_epochs 30 \
+    --num_train_epochs ${num_epochs} \
     --fp16 \
     --save_steps 400 \
     --output_dir ${OUTPUT_PATH}/${seed} \
@@ -438,6 +455,7 @@ lr=3e-5
 DATA_PATH=${data_root}/downstream/${task}
 OUTPUT_PATH=.${my_folder}/rna-all/${task}/BEACON-B/${MODEL_TYPE}  
 EXEC_PREFIX="env CUDA_VISIBLE_DEVICES=$gpu_device torchrun --nproc_per_node=$nproc_per_node --master_port=$master_port"
+num_epochs=$(python -c "print(int(30 / $EPOCH_FRACTION))")
 echo ${MODEL_PATH}
 ${EXEC_PREFIX} \
 downstream/train_crispr_off_target.py \

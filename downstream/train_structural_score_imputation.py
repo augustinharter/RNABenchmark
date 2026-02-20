@@ -33,7 +33,7 @@ from model.splicebert.modeling_splicebert import SpliceBertForStructuralimputati
 from model.utrbert.modeling_utrbert import UtrBertForStructuralimputation
 from model.utrlm.modeling_utrlm import UtrLmForStructuralimputation
 from tokenizer.tokenization_opensource import OpenRnaLMTokenizer
-early_stopping = EarlyStoppingCallback(early_stopping_patience=20)
+early_stopping = EarlyStoppingCallback(early_stopping_patience=100)
 @dataclass
 class ModelArguments:
     model_name_or_path: Optional[str] = field(default="")

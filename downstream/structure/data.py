@@ -85,13 +85,13 @@ class ContactMapDataset(Dataset):
         # Turn the text into input_ids by
         self.texts = texts
         # get size limit from env variable
-        env_size_fraction = os.getenv('SIZE_FRACTION')
-        if env_size_fraction is not None and data_path.__contains__("train"):
-            orig_size = len(texts)
-            fraction = float(env_size_fraction)
-            stride = int(1 / fraction)
-            self.texts = self.texts[::stride]
-            print(f'Using SIZE_FRACTION: {env_size_fraction} with ({data_path}) dataset size: {orig_size} resulting in size: {len(texts)}')
+        # env_size_fraction = os.getenv('SIZE_FRACTION')
+        # if env_size_fraction is not None and data_path.__contains__("train"):
+        #     orig_size = len(texts)
+        #     fraction = float(env_size_fraction)
+        #     stride = int(1 / fraction)
+        #     self.texts = self.texts[::stride]
+        #     print(f'Using SIZE_FRACTION: {env_size_fraction} with ({data_path}) dataset size: {orig_size} resulting in size: {len(texts)}')
         self.num_labels = 1
         self.data_path = data_path
         # target path is in the same directory as the text file

@@ -206,6 +206,20 @@ def main(args):
 
     
     train_dataset = ContactMapDataset(data_path=os.path.join(args.data_path, args.data_train_path), tokenizer=tokenizer, args=args)
+
+    # Subsample training set and scale epochs to maintain total training steps
+    env_size_fraction = os.getenv('SIZE_FRACTION')
+    if env_size_fraction is not None:
+        original_len = len(train_dataset)
+        num_samples = max(1, int(original_len * float(env_size_fraction)))
+        indices = sorted(random.sample(range(original_len), num_samples))
+        train_dataset = torch.utils.data.Subset(train_dataset, indices)
+        print(f'Subsampled training set: {num_samples}/{original_len} ({float(env_size_fraction):.1%})')
+
+        original_epochs = args.num_epochs
+        args.num_epochs = int(round(original_epochs / float(env_size_fraction)))
+        print(f'Scaled epochs: {original_epochs} -> {args.num_epochs} to maintain training steps')
+
     val_dataset = ContactMapDataset(data_path=os.path.join(args.data_path, args.data_val_path), tokenizer=tokenizer, args=args)
     test_dataset_list = []
     data_test_list = args.data_test_path.replace(" ", "").split(",")

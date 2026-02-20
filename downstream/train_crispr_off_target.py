@@ -32,7 +32,7 @@ from model.splicebert.modeling_splicebert import SpliceBertForCRISPROffTarget
 from model.utrbert.modeling_utrbert import UtrBertForCRISPROffTarget
 from model.utrlm.modeling_utrlm import UtrLmForCRISPROffTarget
 from tokenizer.tokenization_opensource import OpenRnaLMTokenizer
-early_stopping = EarlyStoppingCallback(early_stopping_patience=10)
+early_stopping = EarlyStoppingCallback(early_stopping_patience=100)
 @dataclass
 class ModelArguments:
     model_name_or_path: Optional[str] = field(default="")
@@ -290,6 +290,19 @@ def train():
                                      data_path=os.path.join(data_args.data_path, data_args.data_test_path), 
                                      kmer=data_args.kmer)
     data_collator = DataCollatorForSupervisedDataset(tokenizer=tokenizer,args=training_args)
+
+    # Subsample training set and scale epochs to maintain total training steps
+    env_size_fraction = os.getenv('SIZE_FRACTION')
+    if env_size_fraction is not None:
+        original_len = len(train_dataset)
+        num_samples = max(1, int(original_len * float(env_size_fraction)))
+        indices = sorted(random.sample(range(original_len), num_samples))
+        train_dataset = torch.utils.data.Subset(train_dataset, indices)
+        print(f'Subsampled training set: {num_samples}/{original_len} ({float(env_size_fraction):.1%})')
+
+        original_epochs = training_args.num_train_epochs
+        training_args.num_train_epochs = int(round(original_epochs / float(env_size_fraction)))
+        print(f'Scaled epochs: {original_epochs} -> {training_args.num_train_epochs} to maintain training steps')
     print(f'# train: {len(train_dataset)},val:{len(val_dataset)},test:{len(test_dataset)}')
 
     # load model
