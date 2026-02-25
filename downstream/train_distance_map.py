@@ -154,6 +154,17 @@ def main(args):
     
     train_dataset = DistanceMapDataset(data_path=os.path.join(args.data_path, args.data_train_path), tokenizer=tokenizer, args=args)
     val_dataset = DistanceMapDataset(data_path=os.path.join(args.data_path, args.data_val_path), tokenizer=tokenizer, args=args)
+
+    env_size_fraction = os.getenv('SIZE_FRACTION')
+    if env_size_fraction is not None:
+        original_len = len(train_dataset)
+        num_samples = max(1, int(original_len * float(env_size_fraction)))
+        indices = sorted(random.sample(range(original_len), num_samples))
+        # num_labels = train_dataset.num_labels
+        train_dataset = torch.utils.data.Subset(train_dataset, indices)
+        print(f'Subsampled training set: {num_samples}/{original_len} ({float(env_size_fraction):.1%})')
+        # train_dataset.num_labels = num_labels
+
     test_dataset_list = []
     data_test_list = args.data_test_path.replace(" ", "").split(",")
     for data_test in data_test_list:

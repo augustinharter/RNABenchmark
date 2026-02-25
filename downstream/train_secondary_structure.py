@@ -159,8 +159,15 @@ def main(args):
     train_dataset = SSDataset(data_path=args.data_path, tokenizer=tokenizer, args=args, mode='train')
     val_dataset = SSDataset(data_path=args.data_path, tokenizer=tokenizer, args=args, mode='val')
     test_dataset = SSDataset(data_path=args.data_path, tokenizer=tokenizer, args=args, mode='test')
-   
 
+    env_size_fraction = os.getenv('SIZE_FRACTION')
+    if env_size_fraction is not None:
+        original_len = len(train_dataset)
+        num_samples = max(1, int(original_len * float(env_size_fraction)))
+        indices = sorted(random.sample(range(original_len), num_samples))
+        train_dataset = torch.utils.data.Subset(train_dataset, indices)
+        print(f'Subsampled training set: {num_samples}/{original_len} ({float(env_size_fraction):.1%})')
+   
     
     print(f'# train: {len(train_dataset)},val:{len(val_dataset)},test:{len(test_dataset)}')
     collate_fn = collator(tokenizer,args)

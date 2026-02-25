@@ -34,7 +34,7 @@ from model.splicebert.modeling_splicebert import SpliceBertForNucleotideLevel
 from model.utrbert.modeling_utrbert import UtrBertForNucleotideLevel
 from model.utrlm.modeling_utrlm import UtrLmForNucleotideLevel
 from tokenizer.tokenization_opensource import OpenRnaLMTokenizer
-early_stopping = EarlyStoppingCallback(early_stopping_patience=100)
+early_stopping = EarlyStoppingCallback(early_stopping_patience=20)
 @dataclass
 class ModelArguments:
     model_name_or_path: Optional[str] = field(default="")
@@ -170,7 +170,16 @@ class SupervisedDataset(Dataset):
         if len(data[0]) == 2:
             # data is in the format of [text, label]
             texts = [d[0].upper().replace("U", "T")for d in data]
-            labels = np.array([list(map(float, d[1])) for d in data]).astype(np.float32)          
+            labels = np.array([list(map(float, d[1])) for d in data]).astype(np.float32)
+            #get size limit from env variable
+            # env_size_fraction = os.getenv('SIZE_FRACTION')
+            # if env_size_fraction is not None and data_path.__contains__("train"):
+            #     orig_size = len(texts)
+            #     fraction = float(env_size_fraction)
+            #     stride = int(1 / fraction)
+            #     texts = texts[::stride]
+            #     labels = labels[::stride]
+            #     print(f'Using SIZE_FRACTION: {env_size_fraction} with original dataset size: {orig_size} resulting in size: {len(texts)}')
         else:
             print(len(data[0]))
             raise ValueError("Data format not supported.")
@@ -186,16 +195,7 @@ class SupervisedDataset(Dataset):
                 torch.distributed.barrier()
         # ensure tokenizer
         print(type(texts[0]))
-        #get size limit from env variable
-        env_size_fraction = os.getenv('SIZE_FRACTION')
-        if env_size_fraction is not None and data_path.__contains__("train"):
-            orig_size = len(texts)
-            fraction = float(env_size_fraction)
-            stride = int(1 / fraction)
-            texts = texts[::stride]
-            print(f'Using SIZE_FRACTION: {env_size_fraction} with original dataset size: {orig_size} resulting in size: {len(texts)}')
-        print(texts[0])
-        test_example = tokenizer.tokenize(texts[0])
+        test_example = tokenizer.tokenize(texts[0])          
         print(test_example)
         print(len(test_example))
         print(tokenizer(texts[0]))
@@ -362,17 +362,16 @@ def train():
     data_collator = DataCollatorForSupervisedDataset(tokenizer=tokenizer,args=training_args)
 
     # Subsample training set and scale epochs to maintain total training steps
-    # env_size_fraction = os.getenv('SIZE_FRACTION')
-    # if env_size_fraction is not None:
-    #     original_len = len(train_dataset)
-    #     num_samples = max(1, int(original_len * float(env_size_fraction)))
-    #     indices = sorted(random.sample(range(original_len), num_samples))
-    #     train_dataset = torch.utils.data.Subset(train_dataset, indices)
-    #     print(f'Subsampled training set: {num_samples}/{original_len} ({float(env_size_fraction):.1%})')
-
-    #     original_epochs = training_args.num_train_epochs
-    #     training_args.num_train_epochs = int(round(original_epochs / float(env_size_fraction)))
-    #     print(f'Scaled epochs: {original_epochs} -> {training_args.num_train_epochs} to maintain training steps')
+    env_size_fraction = os.getenv('SIZE_FRACTION')
+    if env_size_fraction is not None:
+        original_len = len(train_dataset)
+        num_samples = max(1, int(original_len * float(env_size_fraction)))
+        indices = sorted(random.sample(range(original_len), num_samples))
+        num_labels = train_dataset.num_labels
+        train_dataset = torch.utils.data.Subset(train_dataset, indices)
+        print(f'Subsampled training set: {num_samples}/{original_len} ({float(env_size_fraction):.1%})')
+        train_dataset.num_labels = num_labels
+        
     print(f'# train: {len(train_dataset)},val:{len(val_dataset)},test:{len(test_dataset)}')
 
     # load model
@@ -492,14 +491,13 @@ def train():
         #safe_save_model_for_hf_trainer(trainer=trainer, output_dir=training_args.output_dir)
 
     # get the evaluation results from trainer
-    if training_args.eval_and_save_results:
-        results_path = os.path.join(training_args.output_dir, "results", training_args.run_name)
-        
-        os.makedirs(results_path, exist_ok=True)
-        
-        results_test = trainer.evaluate(eval_dataset=test_dataset)
-        with open(os.path.join(results_path, "test_results.json"), "w") as f:
-            json.dump(results_test, f, indent=4)
+    results_path = os.path.join(training_args.output_dir, "results", training_args.run_name)
+    
+    os.makedirs(results_path, exist_ok=True)
+    
+    results_test = trainer.evaluate(eval_dataset=test_dataset)
+    with open(os.path.join(results_path, "test_results.json"), "w") as f:
+        json.dump(results_test, f, indent=4)
         
 
 

@@ -66,6 +66,9 @@ all_results = {}
 for limit in limits:
     limit_results = {}
     path = os.path.join('experiments', str(limit), 'rna-all')
+    if not os.path.exists(path):
+        print(f"Path {path} does not exist, skipping limit {limit}")
+        continue
     for task in os.listdir(path):
         try:
             if task == 'Degradation':
@@ -96,7 +99,7 @@ for limit in limits:
                         metric = results[task_to_metric[task]]
                         limit_results[task] = metric
             else:
-                print(f"Results for {task}: No results found at {eval_file}")
+                print(f"No results for {task} in file {eval_file}")
         except Exception as e:
             print(f"Error processing results for {task} at {eval_file}: {e}")
     all_results[limit] = limit_results
@@ -118,7 +121,10 @@ plt.figure(figsize=(3*len(limits), 6))
 
 tasks = list(task_to_dataset_size.keys())
 for lidx, limit in enumerate(limits):
-    values = [100*all_results[limit][task] if task in all_results[limit] else 0 for task in tasks]
+    if limit not in all_results:
+        values = [-1 for task in tasks]
+    else:
+        values = [100*all_results[limit][task] if task in all_results[limit] else -1 for task in tasks]
     x = [spacing*i + lidx * width for i in range(len(tasks))]
     bars =plt.bar(x, values, width=width, align='center', label=limit)
     # dont show leading 0s in bar labels

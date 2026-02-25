@@ -1,4 +1,5 @@
 import os
+import sys
 
 def get_sub_folders(path, recurse=0):
     if recurse == 0:
@@ -12,7 +13,8 @@ def get_sub_folders(path, recurse=0):
         return sub_folders
     
 all_folders = get_sub_folders('experiments', recurse=-1)
-for folder in all_folders:
+task = sys.argv[1] if len(sys.argv)>1 else None
+for folder in (all_folders if (task is None) else [f for f in all_folders if (task in f)]):
     if folder.split(os.path.sep)[-1].startswith('checkpoint'):
         print('deleting folder: ', folder)
         # rmdir even if not empty, since checkpoints are large and we want to free up space

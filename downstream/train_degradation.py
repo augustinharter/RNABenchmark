@@ -37,7 +37,7 @@ from model.splicebert.modeling_splicebert import SpliceBertForNucleotideLevel
 from model.utrbert.modeling_utrbert import UtrBertForNucleotideLevel
 from model.utrlm.modeling_utrlm import UtrLmForNucleotideLevel
 from tokenizer.tokenization_opensource import OpenRnaLMTokenizer
-early_stopping = EarlyStoppingCallback(early_stopping_patience=100)
+early_stopping = EarlyStoppingCallback(early_stopping_patience=20)
 @dataclass
 class ModelArguments:
     model_name_or_path: Optional[str] = field(default="facebook/opt-125m")
@@ -196,13 +196,13 @@ class SupervisedDataset(Dataset):
         # ensure tokenier
         print(type(texts[0]))
         # get size limit from env variable
-        env_size_fraction = os.getenv('SIZE_FRACTION')
-        if env_size_fraction is not None and data_path.split("/")[-1].__contains__("train"):
-            orig_size = len(texts)
-            fraction = float(env_size_fraction)
-            stride = int(1 / fraction)
-            texts = texts[::stride]
-            print(f'Using SIZE_FRACTION: {env_size_fraction} with original dataset size: {orig_size} resulting in size: {len(texts)}')
+        # env_size_fraction = os.getenv('SIZE_FRACTION')
+        # if env_size_fraction is not None and data_path.split("/")[-1].__contains__("train"):
+        #     orig_size = len(texts)
+        #     fraction = float(env_size_fraction)
+        #     stride = int(1 / fraction)
+        #     texts = texts[::stride]
+        #     print(f'Using SIZE_FRACTION: {env_size_fraction} with original dataset size: {orig_size} resulting in size: {len(texts)}')
         print(texts[0])
         test_example = tokenizer.tokenize(texts[0])
         print(test_example)
@@ -375,6 +375,17 @@ def train():
     val_dataset = SupervisedDataset(os.path.join(data_args.data_path, data_args.data_val_path), tokenizer, signal_noise_cutoff=1.0, test_set=None, kmer=data_args.kmer, args=training_args)
     public_test_dataset = SupervisedDataset(os.path.join(data_args.data_path, data_args.data_test_path), tokenizer, signal_noise_cutoff=-99.0, test_set='public', kmer=data_args.kmer, args=training_args)
     private_test_dataset = SupervisedDataset(os.path.join(data_args.data_path, data_args.data_test_path), tokenizer, signal_noise_cutoff=-99.0, test_set='private', kmer=data_args.kmer, args=training_args)
+
+    env_size_fraction = os.getenv('SIZE_FRACTION')
+    if env_size_fraction is not None:
+        original_len = len(train_dataset)
+        num_samples = max(1, int(original_len * float(env_size_fraction)))
+        indices = sorted(random.sample(range(original_len), num_samples))
+        num_labels = train_dataset.num_labels
+        train_dataset = torch.utils.data.Subset(train_dataset, indices)
+        print(f'Subsampled training set: {num_samples}/{original_len} ({float(env_size_fraction):.1%})')
+        train_dataset.num_labels = num_labels
+        
     #print(len(public_test_dataset))
     data_collator = DataCollatorForSupervisedDataset(tokenizer=tokenizer)
     test_data_collator = TestDataCollatorForSupervisedDataset(tokenizer=tokenizer)

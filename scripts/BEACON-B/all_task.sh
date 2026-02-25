@@ -12,6 +12,8 @@ EPOCH_FRACTION=${SIZE_FRACTION}
 # compute epoch multiplier from fraction to get same compute budget for each run, use python -c "print(int(1.0 / $EPOCH_FRACTION))"
 EPOCH_MULTIPLIER=$(python -c "print(int(1.0 / $EPOCH_FRACTION))")
 
+SELECTED_TASK=${SELECTED_TASK:-'all'}
+
 my_folder="/experiments/$SIZE_FRACTION"
 gpu_device=${GPU:-0}
 echo "Using SIZE_FRACTION: $SIZE_FRACTION with EPOCH_MULTIPLIER: $EPOCH_MULTIPLIER on GPU device $gpu_device. Results will be saved in $my_folder"
@@ -41,8 +43,10 @@ data=''
 MODEL_PATH=${model_root}/baseline/BEACON-B/
 
 
- 
+
 task='Secondary_structure_prediction'
+if [ "$SELECTED_TASK" == "all" ] || [ "$SELECTED_TASK" == "$task" ]; then
+echo "RUNNING TASK: $task"
 batch_size=1
 lr=3e-5
 DATA_PATH=${data_root}/downstream/${task}/bpRNA
@@ -62,20 +66,24 @@ downstream/train_secondary_structure.py \
     --gradient_accumulation_steps 8 \
     --lr ${lr} \
     --num_epochs ${num_epochs} \
-    --patience 100 \
+    --patience 20 \
     --num_workers 1 \
     --token_type ${token} \
     --model_type ${MODEL_TYPE} \
     --seed ${seed} \
+
+fi
 
 
 
 
 
 task='ContactMap'
+if [ "$SELECTED_TASK" == "all" ] || [ "$SELECTED_TASK" == "$task" ]; then
+
+echo "RUNNING TASK: $task"
 data_file_train=train.csv; data_file_val=val.csv; data_file_test=test,RFAM19,DIRECT
 batch_size=1
-
 lr=3e-5
 DATA_PATH=${data_root}/downstream/${task}
 OUTPUT_PATH=.${my_folder}/rna-all/${task}/BEACON-B/${MODEL_TYPE}  
@@ -95,15 +103,18 @@ downstream/train_contact_map.py \
     --gradient_accumulation_steps 8 \
     --lr ${lr} \
     --num_epochs ${num_epochs} \
-    --patience 100 \
+    --patience 20 \
     --num_workers 1 \
     --token_type ${token} \
     --model_type ${MODEL_TYPE} \
     --seed ${seed} \
     
+fi
 
 
 task='DistanceMap'
+if [ "$SELECTED_TASK" == "all" ] || [ "$SELECTED_TASK" == "$task" ]; then
+echo "RUNNING TASK: $task"
 data_file_train=train.csv; data_file_val=val.csv; data_file_test=test,RFAM19,DIRECT
 batch_size=1
 lr=5e-5
@@ -125,14 +136,17 @@ downstream/train_distance_map.py \
     --gradient_accumulation_steps 8 \
     --lr ${lr} \
     --num_epochs ${num_epochs} \
-    --patience 100 \
+    --patience 20 \
     --num_workers 1 \
     --token_type ${token} \
     --model_type ${MODEL_TYPE} \
     --seed ${seed} \
 
+fi
 
 task='StructuralScoreImputation'
+if [ "$SELECTED_TASK" == "all" ] || [ "$SELECTED_TASK" == "$task" ]; then
+echo "RUNNING TASK: $task"
 data_file_train=train.csv; data_file_val=val.csv; data_file_test=test.csv
 batch_size=32
 lr=3e-5
@@ -166,9 +180,12 @@ downstream/train_structural_score_imputation.py \
     --token_type ${token} \
     --model_type ${MODEL_TYPE} \
 
-
+fi
 
 task='SpliceAI'
+if [ "$SELECTED_TASK" == "all" ] || [ "$SELECTED_TASK" == "$task" ]; then
+
+echo "RUNNING TASK: $task"
 data_file_train=train.csv; data_file_val=val.csv; data_file_test=test.csv
 batch_size=32
 lr=3e-5
@@ -202,7 +219,12 @@ downstream/train_spliceai.py \
     --token_type ${token} \
     --model_type ${MODEL_TYPE} \
 
+fi
+
 task='Isoform'
+if [ "$SELECTED_TASK" == "all" ] || [ "$SELECTED_TASK" == "$task" ]; then
+
+echo "RUNNING TASK: $task"
 data_file_train=train.csv; data_file_val=val.csv; data_file_test=test
 batch_size=32
 lr=5e-5
@@ -236,7 +258,13 @@ downstream/train_isoform.py \
     --token_type ${token} \
     --model_type ${MODEL_TYPE} \
 
+fi
+
+
 task='NoncodingRNAFamily'
+if [ "$SELECTED_TASK" == "all" ] || [ "$SELECTED_TASK" == "$task" ]; then
+
+echo "RUNNING TASK: $task"
 data_file_train=train.csv; data_file_val=val.csv; data_file_test=test.csv
 batch_size=16
 lr=5e-5
@@ -270,8 +298,12 @@ downstream/train_ncrna.py \
     --token_type ${token} \
     --model_type ${MODEL_TYPE} \
 
+fi
+
 
 task='Modification'
+if [ "$SELECTED_TASK" == "all" ] || [ "$SELECTED_TASK" == "$task" ]; then
+echo "RUNNING TASK: $task"
 data_file_train=train.csv; data_file_val=val.csv; data_file_test=test.csv
 batch_size=32
 lr=3e-5
@@ -305,8 +337,11 @@ downstream/train_modification.py \
     --token_type ${token} \
     --model_type ${MODEL_TYPE} \
 
+fi
 
 task='MeanRibosomeLoading'
+if [ "$SELECTED_TASK" == "all" ] || [ "$SELECTED_TASK" == "$task" ]; then
+echo "RUNNING TASK: $task"
 data_file_train=train.csv; data_file_val=val.csv; data_file_test=test.csv
 batch_size=32
 lr=1e-5
@@ -340,8 +375,12 @@ downstream/train_mean_ribosome_loading.py \
     --token_type ${token} \
     --model_type ${MODEL_TYPE} \
 
+fi
 
 task='Degradation'
+if [ "$SELECTED_TASK" == "all" ] || [ "$SELECTED_TASK" == "$task" ]; then
+
+echo "RUNNING TASK: $task"
 data_file_train=train_1.json; data_file_val=val_1.json; data_file_test=test_1.json
 if [ "$SIZE_FRACTION" == "0.01" ] || [ "$SIZE_FRACTION" == "0.02" ]; then
     batch_size=20
@@ -379,8 +418,12 @@ downstream/train_degradation.py \
     --token_type ${token} \
     --model_type ${MODEL_TYPE} \
 
+fi
 
 task='ProgrammableRNASwitches'
+if [ "$SELECTED_TASK" == "all" ] || [ "$SELECTED_TASK" == "$task" ]; then
+
+echo "RUNNING TASK: $task"
 data_file_train=train.csv; data_file_val=val.csv; data_file_test=test.csv
 batch_size=32
 lr=1e-5
@@ -414,7 +457,12 @@ downstream/train_programmable_rna_switches.py \
     --token_type ${token} \
     --model_type ${MODEL_TYPE} \
 
+fi
+
 task='CRISPROnTarget'
+if [ "$SELECTED_TASK" == "all" ] || [ "$SELECTED_TASK" == "$task" ]; then
+
+echo "RUNNING TASK: $task"
 data_file_train=train.csv; data_file_val=val.csv; data_file_test=test.csv
 batch_size=32
 lr=1e-5
@@ -448,7 +496,12 @@ downstream/train_crispr_on_target.py \
     --token_type ${token} \
     --model_type ${MODEL_TYPE} \
 
+fi
+
 task='CRISPROffTarget'
+if [ "$SELECTED_TASK" == "all" ] || [ "$SELECTED_TASK" == "$task" ]; then
+
+echo "RUNNING TASK: $task"
 data_file_train=train.csv; data_file_val=val.csv; data_file_test=test.csv
 batch_size=32
 lr=3e-5
@@ -481,3 +534,5 @@ downstream/train_crispr_off_target.py \
     --seed ${seed} \
     --token_type ${token} \
     --model_type ${MODEL_TYPE} \
+
+fi

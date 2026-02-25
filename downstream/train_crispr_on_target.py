@@ -33,7 +33,7 @@ from model.splicebert.modeling_splicebert import SpliceBertForSequenceClassifica
 from model.utrbert.modeling_utrbert import UtrBertForSequenceClassification
 from model.utrlm.modeling_utrlm import UtrLmForSequenceClassification
 from tokenizer.tokenization_opensource import OpenRnaLMTokenizer
-early_stopping = EarlyStoppingCallback(early_stopping_patience=100)
+early_stopping = EarlyStoppingCallback(early_stopping_patience=20)
 @dataclass
 class ModelArguments:
     model_name_or_path: Optional[str] = field(default="facebook/opt-125m")
@@ -174,13 +174,13 @@ class SupervisedDataset(Dataset):
         # ensure tokenier
         print(type(texts[0]))
         # get size limit from env variable
-        env_size_fraction = os.getenv('SIZE_FRACTION')
-        if env_size_fraction is not None and data_path.split('/')[-1].__contains__("train"):
-            orig_size = len(texts)
-            fraction = float(env_size_fraction)
-            stride = int(1 / fraction)
-            texts = texts[::stride]
-            print(f'Using SIZE_FRACTION: {env_size_fraction} with original dataset size: {orig_size} resulting in size: {len(texts)}')
+        # env_size_fraction = os.getenv('SIZE_FRACTION')
+        # if env_size_fraction is not None and data_path.split('/')[-1].__contains__("train"):
+        #     orig_size = len(texts)
+        #     fraction = float(env_size_fraction)
+        #     stride = int(1 / fraction)
+        #     texts = texts[::stride]
+        #     print(f'Using SIZE_FRACTION: {env_size_fraction} with original dataset size: {orig_size} resulting in size: {len(texts)}')
         print(texts[0])
         test_example = tokenizer.tokenize(texts[0])
         print(test_example)
@@ -293,6 +293,17 @@ def train():
     test_dataset = SupervisedDataset(tokenizer=tokenizer, args=training_args,
                                      data_path=os.path.join(data_args.data_path, data_args.data_test_path), 
                                      kmer=data_args.kmer)
+
+    env_size_fraction = os.getenv('SIZE_FRACTION')
+    if env_size_fraction is not None:
+        original_len = len(train_dataset)
+        num_samples = max(1, int(original_len * float(env_size_fraction)))
+        indices = sorted(random.sample(range(original_len), num_samples))
+        num_labels = train_dataset.num_labels
+        train_dataset = torch.utils.data.Subset(train_dataset, indices)
+        print(f'Subsampled training set: {num_samples}/{original_len} ({float(env_size_fraction):.1%})')
+        train_dataset.num_labels = num_labels
+        
     data_collator = DataCollatorForSupervisedDataset(tokenizer=tokenizer,args=training_args)
     print(f'# train: {len(train_dataset)},val:{len(val_dataset)},test:{len(test_dataset)}')
 
@@ -399,13 +410,12 @@ def train():
         #safe_save_model_for_hf_trainer(trainer=trainer, output_dir=training_args.output_dir)
 
     # get the evaluation results from trainer
-    if training_args.eval_and_save_results:
-        results_path = os.path.join(training_args.output_dir, "results", training_args.run_name)
-        
-        os.makedirs(results_path, exist_ok=True)
-        results_test = trainer.evaluate(eval_dataset=test_dataset)
-        with open(os.path.join(results_path, "test_results.json"), "w") as f:
-            json.dump(results_test, f, indent=4)
+    results_path = os.path.join(training_args.output_dir, "results", training_args.run_name)
+    
+    os.makedirs(results_path, exist_ok=True)
+    results_test = trainer.evaluate(eval_dataset=test_dataset)
+    with open(os.path.join(results_path, "test_results.json"), "w") as f:
+        json.dump(results_test, f, indent=4)
 
 
 if __name__ == "__main__":
