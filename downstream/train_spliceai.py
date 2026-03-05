@@ -499,13 +499,12 @@ def train():
                                    )
         return trainer
     
-    from active_learning import do_active_learning, mc_dropout_ranking_function
+    from active_learning import do_active_learning
 
     trainer, final_dataset = do_active_learning(model, 
                                             train_dataset,
                                             test_dataset,
-                                            make_trainer, 
-                                            mc_dropout_ranking_function)
+                                            make_trainer)
 
     if training_args.save_model:
         trainer.save_state()
