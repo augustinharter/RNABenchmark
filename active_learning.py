@@ -5,11 +5,11 @@ import random
 from transformers import Trainer
 
 def do_active_learning(model, complete_train_dataset, make_trainer_from_model_and_dataset, ranking_function, initial_fraction, iteration_fraction, num_iterations):
-    model_copy = model.copy()
+    model_copy = model.state_dict()  # Save the initial state of the model to reset it in each iteration
     current_indices = random.sample(range(len(complete_train_dataset)), int(len(complete_train_dataset) * initial_fraction))
     current_train_set = torch.utils.data.Subset(complete_train_dataset, current_indices)
     for iteration in range(num_iterations):
-        model = model_copy.copy()  # Reset the model to its initial state for the next iteration
+        model.load_state_dict(model_copy)  # Reset the model to its initial state for the next iteration
         trainer = make_trainer_from_model_and_dataset(model, current_train_set)
         next_indices = get_next_data_point_indices_for_active_learning(trainer, complete_train_dataset, current_indices, ranking_function, iteration_fraction)
         current_indices.extend(next_indices)
