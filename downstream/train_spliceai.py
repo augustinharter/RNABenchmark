@@ -486,17 +486,17 @@ def train():
     #                                )
     # trainer.train()
 
-    def make_trainer(model, train_dataset):
+    def make_trainer(model, dataset):
+        #training_args.eval_strategy = "no"
         trainer = transformers.Trainer(model=model,
                                    tokenizer=tokenizer,
                                    args=training_args,
                                    compute_metrics=compute_metrics,
-                                   train_dataset=train_dataset,
-                                   #eval_dataset=val_dataset,
+                                   train_dataset=dataset,
+                                   eval_dataset=val_dataset,
                                    data_collator=data_collator,
                                    callbacks=[early_stopping],
                                    )
-        trainer.args.eval_trategy = "no"  # Disable evaluation during training for active learning iterations
         return trainer
     
     from active_learning import do_active_learning, mc_dropout_ranking_function

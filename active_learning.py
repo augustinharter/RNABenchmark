@@ -12,7 +12,7 @@ def do_active_learning(model, complete_train_dataset, test_dataset, make_trainer
 
     active_learning_results = []
     for iteration in range(num_iterations):
-        print(f'Active Learning Iteration {iteration+1}/{num_iterations} with current training fraction: {len(current_indices)/len(complete_train_dataset):.2f}')
+        print(f'Active Learning Iteration {iteration+1}/{num_iterations} with current training fraction: {len(current_train_set)/len(complete_train_dataset):.2f}')
         model.load_state_dict(model_copy)  # Reset the model to its initial state for the next iteration
         trainer = make_trainer_from_model_and_dataset(model, current_train_set)
         trainer.train()
@@ -62,4 +62,5 @@ def mc_dropout_ranking_function(trainer:Trainer, dataset, num_forward_passes=2):
                 uncertainties.append(sample_ucnertainty)
     
     print(f'Uncertainties calculated for {len(uncertainties)} data points.')
+    print(f'Example uncertainties[:10]: {uncertainties[:10]}')  # Print the first 10 uncertainties for inspection
     return uncertainties

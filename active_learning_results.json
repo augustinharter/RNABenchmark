@@ -1,0 +1,15 @@
+[
+    [
+        0.019996127997344914,
+        {
+            "eval_loss": 0.003254225943237543,
+            "eval_acceptor topk acc": 0.07749077490774908,
+            "eval_donor topk acc": 0.02909090909090909,
+            "eval_avg topk acc": 0.05329084199932908,
+            "eval_runtime": 7.1023,
+            "eval_samples_per_second": 2323.88,
+            "eval_steps_per_second": 72.652,
+            "epoch": 30.0
+        }
+    ]
+]
