@@ -445,7 +445,23 @@ def train():
         )     
 
     # define trainer
-    trainer = transformers.Trainer(model=model,
+    # trainer = transformers.Trainer(model=model,
+    #                                tokenizer=tokenizer,
+    #                                args=training_args,
+    #                                compute_metrics=compute_metrics,
+    #                                train_dataset=train_dataset,
+    #                                eval_dataset=val_dataset,
+    #                                data_collator=data_collator,
+    #                                callbacks=[early_stopping],
+    #                                )
+    # trainer.train()
+    #
+    # if training_args.save_model:
+    #     trainer.save_state()
+    #     #safe_save_model_for_hf_trainer(trainer=trainer, output_dir=training_args.output_dir)
+
+    def training_function(model, train_dataset):
+        trainer = transformers.Trainer(model=model,
                                    tokenizer=tokenizer,
                                    args=training_args,
                                    compute_metrics=compute_metrics,
@@ -454,11 +470,29 @@ def train():
                                    data_collator=data_collator,
                                    callbacks=[early_stopping],
                                    )
-    trainer.train()
+        trainer.train()
+        return trainer.model
+    
+    from active_learning import do_active_learning, mc_dropout_ranking_function
 
-    if training_args.save_model:
-        trainer.save_state()
-        #safe_save_model_for_hf_trainer(trainer=trainer, output_dir=training_args.output_dir)
+    model, final_dataset = do_active_learning(model, 
+                                            train_dataset, 
+                                            training_function, 
+                                            mc_dropout_ranking_function, 
+                                            initial_fraction=0.01, 
+                                            iteration_fraction=0.01, 
+                                            num_iterations=10)
+    
+    
+    trainer = transformers.Trainer(model=model,
+                                   tokenizer=tokenizer,
+                                   args=training_args,
+                                   compute_metrics=compute_metrics,
+                                   train_dataset=final_dataset,
+                                   eval_dataset=val_dataset,
+                                   data_collator=data_collator,
+                                   callbacks=[early_stopping],
+                                   )
 
     # get the evaluation results from trainer
     results_path = os.path.join(training_args.output_dir, "results", training_args.run_name)
