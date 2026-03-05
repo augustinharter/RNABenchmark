@@ -20,7 +20,7 @@ def do_active_learning(model, complete_train_dataset, test_dataset, make_trainer
         current_indices.extend(next_indices)
         current_train_set = torch.utils.data.Subset(complete_train_dataset, current_indices)
         results = trainer.evaluate(test_dataset)
-        active_learning_results.append((len(current_indices)/len(complete_train_dataset), results))
+        active_learning_results.append((f'{len(current_train_set)/len(complete_train_dataset):.2f}', results))
         print(f'Iteration {iteration+1} results: {results}')
         json.dump(active_learning_results, open('active_learning_results.json', 'w'), indent=4)  # Save results after each iteration
 

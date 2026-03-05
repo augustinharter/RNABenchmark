@@ -14,7 +14,7 @@ EPOCH_MULTIPLIER=$(python -c "print(int(1.0 / $EPOCH_FRACTION))")
 
 SELECTED_TASK=${SELECTED_TASK:-'all'}
 
-my_folder="/experiments/$SIZE_FRACTION"
+my_folder="/experiments/AL-0.01-0.01-10"
 gpu_device=${GPU:-0}
 echo "Using SIZE_FRACTION: $SIZE_FRACTION with EPOCH_MULTIPLIER: $EPOCH_MULTIPLIER on GPU device $gpu_device. Results will be saved in $my_folder"
 
