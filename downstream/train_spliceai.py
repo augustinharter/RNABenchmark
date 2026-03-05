@@ -505,10 +505,7 @@ def train():
                                             train_dataset,
                                             test_dataset,
                                             make_trainer, 
-                                            mc_dropout_ranking_function, 
-                                            initial_fraction=0.01, 
-                                            iteration_fraction=0.01, 
-                                            num_iterations=10)
+                                            mc_dropout_ranking_function)
 
     if training_args.save_model:
         trainer.save_state()

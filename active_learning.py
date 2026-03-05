@@ -4,8 +4,12 @@ import torch
 import random
 from transformers import Trainer
 import json
+import os
 
-def do_active_learning(model, complete_train_dataset, test_dataset, make_trainer_from_model_and_dataset, ranking_function, initial_fraction, iteration_fraction, num_iterations):
+def do_active_learning(model, complete_train_dataset, test_dataset, make_trainer_from_model_and_dataset):
+    initial_fraction, iteration_fraction, num_iterations = [float(os.getenv('START_FRACTION')), float(os.getenv('ITERATION_FRACTION')), int(os.getenv('ITERATIONS'))]
+    ranking_function = mc_dropout_ranking_function
+    results_file_name = f'logs/al/mcdropout_spliceAI_{initial_fraction}_{iteration_fraction}_{num_iterations}.json'
     model_copy = model.state_dict()  # Save the initial state of the model to reset it in each iteration
     current_indices = random.sample(range(len(complete_train_dataset)), int(len(complete_train_dataset) * initial_fraction))
     current_train_set = torch.utils.data.Subset(complete_train_dataset, current_indices)
@@ -17,12 +21,13 @@ def do_active_learning(model, complete_train_dataset, test_dataset, make_trainer
         trainer = make_trainer_from_model_and_dataset(model, current_train_set)
         trainer.train()
         next_indices = get_next_data_point_indices_for_active_learning(trainer, complete_train_dataset, current_indices, ranking_function, iteration_fraction)
-        current_indices.extend(next_indices)
-        current_train_set = torch.utils.data.Subset(complete_train_dataset, current_indices)
         results = trainer.evaluate(test_dataset)
         active_learning_results.append((f'{len(current_train_set)/len(complete_train_dataset):.2f}', results))
         print(f'Iteration {iteration+1} results: {results}')
-        json.dump(active_learning_results, open('active_learning_results.json', 'w'), indent=4)  # Save results after each iteration
+        json.dump(active_learning_results, open(results_file_name, 'w'), indent=4)  # Save results after each iteration
+        
+        current_indices.extend(next_indices)
+        current_train_set = torch.utils.data.Subset(complete_train_dataset, current_indices)
 
 
     return trainer, current_train_set
