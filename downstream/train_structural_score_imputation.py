@@ -474,24 +474,13 @@ def train():
     
     from active_learning import do_active_learning, mc_dropout_ranking_function
 
-    model, final_dataset = do_active_learning(model, 
+    trainer, final_dataset = do_active_learning(model, 
                                             train_dataset, 
                                             make_trainer, 
                                             mc_dropout_ranking_function, 
                                             initial_fraction=0.01, 
                                             iteration_fraction=0.01, 
                                             num_iterations=10)
-    
-    
-    trainer = transformers.Trainer(model=model,
-                                   tokenizer=tokenizer,
-                                   args=training_args,
-                                   compute_metrics=compute_metrics,
-                                   train_dataset=final_dataset,
-                                   eval_dataset=val_dataset,
-                                   data_collator=data_collator,
-                                   callbacks=[early_stopping],
-                                   )
     
     # get the evaluation results from trainer
     results_path = os.path.join(training_args.output_dir, "results", training_args.run_name)

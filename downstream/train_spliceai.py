@@ -475,16 +475,40 @@ def train():
         )     
 
     # define trainer
-    trainer = transformers.Trainer(model=model,
+    # trainer = transformers.Trainer(model=model,
+    #                                tokenizer=tokenizer,
+    #                                args=training_args,
+    #                                compute_metrics=compute_metrics,
+    #                                train_dataset=train_dataset,
+    #                                eval_dataset=val_dataset,
+    #                                data_collator=data_collator,
+    #                                callbacks=[early_stopping],
+    #                                )
+    # trainer.train()
+
+    def make_trainer(model, train_dataset):
+        trainer = transformers.Trainer(model=model,
                                    tokenizer=tokenizer,
                                    args=training_args,
                                    compute_metrics=compute_metrics,
                                    train_dataset=train_dataset,
-                                   eval_dataset=val_dataset,
+                                   #eval_dataset=val_dataset,
                                    data_collator=data_collator,
                                    callbacks=[early_stopping],
                                    )
-    trainer.train()
+        trainer.args.eval_trategy = "no"  # Disable evaluation during training for active learning iterations
+        return trainer
+    
+    from active_learning import do_active_learning, mc_dropout_ranking_function
+
+    trainer, final_dataset = do_active_learning(model, 
+                                            train_dataset,
+                                            test_dataset,
+                                            make_trainer, 
+                                            mc_dropout_ranking_function, 
+                                            initial_fraction=0.01, 
+                                            iteration_fraction=0.01, 
+                                            num_iterations=10)
 
     if training_args.save_model:
         trainer.save_state()
