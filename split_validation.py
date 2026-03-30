@@ -4,12 +4,15 @@ import pandas as pd
 import time
 import umap
 from Levenshtein import distance as lev_dist # Example distance metric
+from Levenshtein import hamming as ham_dist
 import subprocess
 import os
 #%%
 task_name_to_seq_column = {
     'SpliceAI': 'sequence',
+    'Modification': 'sequence',
 }
+tasks_names = ['Modification'] 
 tasks_names = ['SpliceAI']
 
 # aligner = Align.PairwiseAligner()
@@ -26,39 +29,65 @@ def load_train_test_val_sequences(task_name):
    
     return train, test, val
 
-#%%
+#%%  DISTANCE MATRIX
 for task_name in tasks_names:
     train, test, val = load_train_test_val_sequences(task_name)
+    combined = train + test + val
 
     timer = time.time()
-    distasnce_matrix = np.zeros((len(train), len(test)), dtype=np.uint16)
-    for trainidx, train_seq in enumerate(train):
-        if trainidx % 100 == 0:
+    distance_matrix = np.zeros((len(combined), len(combined)), dtype=np.uint8)
+    for idx, seq in enumerate(combined):
+        if idx % 10 == 0:
             elapsed_time = time.time() - timer
-            remaining_time = elapsed_time / (trainidx + 1) * (len(train) - trainidx - 1) / 60
-            print(f'Elapsed time: {elapsed_time/60:.2f}m, Remaining time: {remaining_time:.2f}m', end='\r')
-        for testidx, test_seq in enumerate(test):
-            dist = lev_dist(train_seq, test_seq)
-            distasnce_matrix[trainidx, testidx] = dist
+            remaining_time = elapsed_time / (idx + 1) * (len(combined) - idx - 1) / 60
+            print(f'Progress: {(idx+1)/len(combined):.2%}  elapsed time: {elapsed_time/60:.2f}m, Remaining time: {remaining_time:.2f}m', end='\r')
+        for otheridx, otherseq in enumerate(combined[idx+1:], start=idx+1):
+            dist = ham_dist(seq, otherseq)
+            distance_matrix[idx, otheridx] = dist
 
-    np.save(f'data/{task_name}/train-test-distances.npy', distasnce_matrix)
+    np.save(f'data/{task_name}/ham-distances.npy', distance_matrix)
     
-#%%
-for task_name in tasks_names:
-    distasnce_matrix = np.load(f'data/{task_name}/train-test-distances.npy')
-    print(f'{task_name} distance matrix shape: {distasnce_matrix.shape}')
+#%% LOAD DISTANCE MATRIX
+for task_name in ['SpliceAI']:
+    distance_matrix = np.load(f'data/{task_name}/ham-distances.npy')
+    print(f'{task_name} distance matrix shape: {distance_matrix.shape}')
 
-#%% write one fasta files for train, val and test sequences
+#%% Pick random pairs
+for task_name in tasks_names:
+    train, test, val = load_train_test_val_sequences(task_name)
+    x, y = np.random.choice(len(train), 10000, replace=False), np.random.choice(len(test), 10000, replace=False)
+    sampled_distances = distance_matrix[x, y]
+    print(f'{task_name} sampled distances: {sampled_distances[:10]}')
+    # plot histogram of sampled distances
+    from matplotlib import pyplot as plt
+    plt.hist(sampled_distances, bins=50)
+    plt.title(f'{task_name} Levenshtein Distances')
+    plt.show()
+    plt.savefig(f'{task_name}_distance_histogram.png')
+    
+#%% UMAP Visualization
+for task_name in tasks_names:
+    distance_matrix = np.load(f'data/{task_name}/train-test-distances.npy')
+    # UMAP expects a square distance matrix, so we can symmetrize it by taking the average of the train-test and test-train distances
+    symmetric_distance_matrix = (distance_matrix + distance_matrix.T) / 2
+    reducer = umap.UMAP(metric='precomputed', random_state=42)
+    embedding = reducer.fit_transform(symmetric_distance_matrix)
+    
+    plt.scatter(embedding[:, 0], embedding[:, 1], s=5, alpha=0.5)
+    plt.title(f'{task_name} UMAP Embedding of Train-Test Distances')
+    plt.show()
+
+    
+#%% FASTA FILE write one fasta files for train, val and test sequences
 for task_name in tasks_names:
     train, test, val = load_train_test_val_sequences(task_name)
     combined = train + test + val
     with open(f'data/{task_name}/combined_sequences.fasta', 'w') as f:
         for idx, seq in enumerate(combined):
             f.write(f'>seq_{idx}\n{seq}\n')
-
-    
+            
 #%% mmseq2 clustering
-def run_mmseqs_clustering(input_fasta, output_prefix, min_id=0.3, coverage=0):
+def run_mmseqs_clustering(input_fasta, output_prefix, min_id=0.3, coverage=0.8):
     tmp_dir = "tmp_mmseqs"
     
     # Ensure tmp directory exists
@@ -75,10 +104,10 @@ def run_mmseqs_clustering(input_fasta, output_prefix, min_id=0.3, coverage=0):
         "--min-seq-id", str(min_id),
         "-c", str(coverage),
         "-v", "3",  # Verbosity level
-        "--dbtype", "2",
+        "--dbtype", "0",
         "--gpu", "1",  # Use GPU if available
-        "-s", "10",  # Sensitivity level (adjust as needed)
-        "-k", "5",
+        #"-s", "10",  # Sensitivity level (adjust as needed)
+        #"-k", "5",
     ]
 
     try:
@@ -97,8 +126,11 @@ def run_mmseqs_clustering(input_fasta, output_prefix, min_id=0.3, coverage=0):
 
 #%%
 for task_name in tasks_names:
-    df = run_mmseqs_clustering(f'data/{task_name}/combined_sequences.fasta', f'data/{task_name}/rna_clusters', min_id=0.3, coverage=0.0)
+    df = run_mmseqs_clustering(f'data/{task_name}/combined_sequences.fasta', f'data/{task_name}/rna_clusters', min_id=0.3, coverage=0.8)
     print(df)
+    print(f'{task_name} clustering results: {len(set(df["representative"]))} clusters found.')
 # 'clusters' is a pandas DataFrame mapping Sequence ID to Cluster ID
 # Use this to ensure sequences from the same Cluster ID aren't in both Train and Test.
+# %%
+run_mmseqs_clustering('test/DB.fasta', 'test')
 # %%
