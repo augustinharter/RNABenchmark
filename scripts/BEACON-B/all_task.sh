@@ -2,7 +2,7 @@
 
 # This is your argument
 
-export PYTHON_EXEC=/pfss/mlde/workspaces/mlde_wsp_GenomicKB_KGs/ah/miniconda3/envs/beacon/bin/python3
+#export PYTHON_EXEC=/pfss/mlde/workspaces/mlde_wsp_GenomicKB_KGs/ah/miniconda3/envs/beacon/bin/python3
 
 # You can set SIZE_FRACTION to use a fraction of the data for training.
 # default is 1.0 (use all data)

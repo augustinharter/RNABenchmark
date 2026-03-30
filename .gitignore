@@ -7,6 +7,7 @@ experiments*/
 logs*/
 .vscode/
 tmp*/
+out/
 
 # Byte-compiled / optimized / DLL files
 __pycache__/
