@@ -6,6 +6,7 @@ outputs_old/
 experiments*/
 logs*/
 .vscode/
+tmp*/
 
 # Byte-compiled / optimized / DLL files
 __pycache__/
