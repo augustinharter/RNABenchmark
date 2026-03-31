@@ -100,6 +100,7 @@ if __name__ == "__main__":
         plt.savefig(f'data/{task_name}/umap_embedding.png')
         plt.show()
 
+    exit(0)
         
     #%% FASTA FILE write one fasta files for train, val and test sequences
     for task_name in tasks_names:
