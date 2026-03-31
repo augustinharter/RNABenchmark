@@ -1,4 +1,5 @@
 #%%
+import sys
 import numpy as np
 import pandas as pd
 import time
@@ -15,7 +16,7 @@ task_name_to_seq_column = {
     'Modification': 'sequence',
 }
 tasks_names = ['Modification'] 
-tasks_names = ['SpliceAI']
+tasks_names = sys.argv[1:] if len(sys.argv) > 1 else tasks_names
 
 # aligner = Align.PairwiseAligner()
 # aligner.match_score = 0
@@ -53,6 +54,7 @@ def compute_partial_distance_matrix(sequences, distance_func, start_idx=0, end_i
 #%% RUN DISTANCE MATRIX ON MULTI CPUS
 if __name__ == "__main__":
     for task_name in tasks_names:
+        print(f'Processing task: {task_name}')
         train, test, val = load_train_test_val_sequences(task_name)
         combined = train + test + val
         #combined = combined[:10000]  # Limit to 1k sequences for testing
@@ -69,36 +71,33 @@ if __name__ == "__main__":
             for idx, partial in enumerate(results):
                 distance_matrix[start_idxs[idx]:end_idxs[idx], start_idxs[idx]:] = partial
         
+        distance_matrix = distance_matrix + distance_matrix.T  # Symmetrize the matrix
         np.save(f'data/{task_name}/distances.npy', distance_matrix)
    
     
-    #%% LOAD DISTANCE MATRIX
-    for task_name in ['SpliceAI']:
-        distance_matrix = np.load(f'data/{task_name}/distances.npy')
-        distance_matrix = distance_matrix + distance_matrix.T  # Symmetrize the matrix
+        #%% LOAD DISTANCE MATRIX
+        #distance_matrix = np.load(f'data/{task_name}/distances.npy')
         print(f'{task_name} distance matrix shape: {distance_matrix.shape}')
         size = distance_matrix.shape[0]
         #combined_len = 10000
-        x, y = np.random.choice(size, 100000, replace=False), np.random.choice(size, 10000, replace=False)
+        x, y = np.random.choice(size, 10000, replace=False), np.random.choice(size, 10000, replace=False)
         sampled_distances = distance_matrix[x, y]
         print(f'{task_name} sampled distances: {sampled_distances[:10]}')
         # plot histogram of sampled distances
-        plt.hist(sampled_distances, bins=50)
-        plt.title(f'{task_name} Levenshtein Distances')
+        plt.hist(sampled_distances, bins=100)
+        plt.title(f'{task_name} Levenshtein Distances 10k Samples')
         plt.savefig(f'data/{task_name}/distance_histogram.png')
-   #%% 
-    exit(0)
         
-    #%% UMAP Visualization
-    for task_name in tasks_names:
-        distance_matrix = np.load(f'data/{task_name}/distances.npy')
+        #%% UMAP Visualization
+        #distance_matrix = np.load(f'data/{task_name}/distances.npy')
         # UMAP expects a square distance matrix, so we can symmetrize it by taking the average of the train-test and test-train distances
-        symmetric_distance_matrix = (distance_matrix + distance_matrix.T) / 2
         reducer = umap.UMAP(metric='precomputed', random_state=42)
-        embedding = reducer.fit_transform(symmetric_distance_matrix)
+        embedding = reducer.fit_transform(distance_matrix)
         
-        plt.scatter(embedding[:, 0], embedding[:, 1], s=5, alpha=0.5)
+        plt.scatter(embedding[:, 0], embedding[:, 1], s=0.1, alpha=0.5, c=[0]*len(train) + [1]*len(test) + [2]*len(val))
         plt.title(f'{task_name} UMAP Embedding of Train-Test Distances')
+        plt.legend(['Train', 'Test', 'Val'])
+        plt.savefig(f'data/{task_name}/umap_embedding.png')
         plt.show()
 
         
