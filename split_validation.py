@@ -54,6 +54,7 @@ def compute_partial_distance_matrix(sequences, distance_func, start_idx=0, end_i
 #%% RUN DISTANCE MATRIX ON MULTI CPUS
 if __name__ == "__main__":
     for task_name in tasks_names:
+        distance_matrix = None
         print(f'Processing task: {task_name}')
         train, test, val = load_train_test_val_sequences(task_name)
         combined = train + test + val
@@ -89,17 +90,30 @@ if __name__ == "__main__":
         plt.savefig(f'data/{task_name}/distance_histogram.png')
         
         #%% UMAP Visualization
-        #distance_matrix = np.load(f'data/{task_name}/distances.npy')
-        # UMAP expects a square distance matrix, so we can symmetrize it by taking the average of the train-test and test-train distances
+        distance_matrix = np.load(f'data/{task_name}/distances.npy')
+        print(distance_matrix.shape)
+        subsample_size = 10000
+        if distance_matrix.shape[0] > subsample_size:
+            indices = np.random.choice(distance_matrix.shape[0], subsample_size, replace=False)
+            distance_matrix = distance_matrix[indices][:, indices]
+            labels = [0]*len(train) + [1]*len(test) + [2]*len(val)
+            labels = np.array(labels)[indices]
+            print(distance_matrix.shape)
+        else:
+            labels = [0]*len(train) + [1]*len(test) + [2]*len(val)
+            labels = np.array(labels)
         reducer = umap.UMAP(metric='precomputed', random_state=42)
         embedding = reducer.fit_transform(distance_matrix)
         
-        plt.scatter(embedding[:, 0], embedding[:, 1], s=0.1, alpha=0.5, c=[0]*len(train) + [1]*len(test) + [2]*len(val))
+        plt.figure(figsize=(10, 8), dpi=300)
+        for label in np.unique(labels):
+            selected = embedding[labels == label]
+            plt.scatter(selected[:, 0], selected[:, 1], s=0.2, alpha=0.5, label=['Train', 'Test', 'Val'][label], marker='+')
         plt.title(f'{task_name} UMAP Embedding of Train-Test Distances')
-        plt.legend(['Train', 'Test', 'Val'])
+        # indicate which color is which split and increase legend marker size
+        plt.legend(markerscale=10)
         plt.savefig(f'data/{task_name}/umap_embedding.png')
-        plt.show()
-
+#%%
     exit(0)
         
     #%% FASTA FILE write one fasta files for train, val and test sequences
