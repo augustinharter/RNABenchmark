@@ -6,18 +6,18 @@
 
 # You can set SIZE_FRACTION to use a fraction of the data for training.
 # default is 1.0 (use all data)
-SIZE_FRACTION=${SIZE_FRACTION:-1.0}
-EPOCH_FRACTION=${SIZE_FRACTION}
+#SIZE_FRACTION=${SIZE_FRACTION:-1.0}
+EPOCH_FRACTION=1
 
 # compute epoch multiplier from fraction to get same compute budget for each run, use python -c "print(int(1.0 / $EPOCH_FRACTION))"
-EPOCH_MULTIPLIER=$(python -c "print(int(1.0 / $EPOCH_FRACTION))")
+#EPOCH_MULTIPLIER=$(python -c "print(int(1.0 / $EPOCH_FRACTION))")
 
-SELECTED_TASK=${SELECTED_TASK:-'all'}
-START_FRACTION=${START_FRACTION:-1.0}
-ITERATION_FRACTION=${ITERATION_FRACTION:-0.0}
-ITERATIONS=${ITERATIONS:-1}
+export SELECTED_TASK=${SELECTED_TASK:-'all'}
+export START_FRACTION=${START_FRACTION:-1.0}
+export ITERATION_FRACTION=${ITERATION_FRACTION:-0.0}
+export ITERATIONS=${ITERATIONS:-1}
 
-my_folder="/experiments/AL-$START_FRACTION-$START_FRACTION-$ITERATIONS"
+my_folder="/experiments/AL-$START_FRACTION-$ITERATION_FRACTION-$ITERATIONS"
 gpu_device=${GPU:-0}
 echo "Using SIZE_FRACTION: $SIZE_FRACTION with EPOCH_MULTIPLIER: $EPOCH_MULTIPLIER on GPU device $gpu_device. Results will be saved in $my_folder"
 

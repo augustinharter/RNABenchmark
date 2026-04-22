@@ -20,14 +20,15 @@ def do_active_learning(model, complete_train_dataset, test_dataset, make_trainer
         model.load_state_dict(model_copy)  # Reset the model to its initial state for the next iteration
         trainer = make_trainer_from_model_and_dataset(model, current_train_set)
         trainer.train()
-        next_indices = get_next_data_point_indices_for_active_learning(trainer, complete_train_dataset, current_indices, ranking_function, iteration_fraction)
         results = trainer.evaluate(test_dataset)
         active_learning_results.append((f'{len(current_train_set)/len(complete_train_dataset):.2f}', results))
         print(f'Iteration {iteration+1} results: {results}')
         json.dump(active_learning_results, open(results_file_name, 'w'), indent=4)  # Save results after each iteration
         
-        current_indices.extend(next_indices)
-        current_train_set = torch.utils.data.Subset(complete_train_dataset, current_indices)
+        if iteration < num_iterations - 1:  # No need to get new indices after the last iteration
+            next_indices = get_next_data_point_indices_for_active_learning(trainer, complete_train_dataset, current_indices, ranking_function, iteration_fraction)
+            current_indices.extend(next_indices)
+            current_train_set = torch.utils.data.Subset(complete_train_dataset, current_indices)
 
 
     return trainer, current_train_set

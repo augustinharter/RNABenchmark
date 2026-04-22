@@ -362,15 +362,15 @@ def train():
     data_collator = DataCollatorForSupervisedDataset(tokenizer=tokenizer,args=training_args)
 
     # Subsample training set and scale epochs to maintain total training steps
-    env_size_fraction = os.getenv('SIZE_FRACTION')
-    if env_size_fraction is not None:
-        original_len = len(train_dataset)
-        num_samples = max(1, int(original_len * float(env_size_fraction)))
-        indices = sorted(random.sample(range(original_len), num_samples))
-        num_labels = train_dataset.num_labels
-        train_dataset = torch.utils.data.Subset(train_dataset, indices)
-        print(f'Subsampled training set: {num_samples}/{original_len} ({float(env_size_fraction):.1%})')
-        train_dataset.num_labels = num_labels
+    # env_size_fraction = os.getenv('SIZE_FRACTION')
+    # if env_size_fraction is not None:
+    #     original_len = len(train_dataset)
+    #     num_samples = max(1, int(original_len * float(env_size_fraction)))
+    #     indices = sorted(random.sample(range(original_len), num_samples))
+    #     num_labels = train_dataset.num_labels
+    #     train_dataset = torch.utils.data.Subset(train_dataset, indices)
+    #     print(f'Subsampled training set: {num_samples}/{original_len} ({float(env_size_fraction):.1%})')
+    #     train_dataset.num_labels = num_labels
         
     print(f'# train: {len(train_dataset)},val:{len(val_dataset)},test:{len(test_dataset)}')
 
